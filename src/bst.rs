@@ -16,7 +16,6 @@
 /// root.inorder()
 /// ```
 use std::fmt::Debug;
-use std::cmp::Ord;
 
 pub struct TreeNode<T> {
     val: T,
@@ -24,10 +23,10 @@ pub struct TreeNode<T> {
     right: Option<Box<TreeNode<T>>>
 }
 
-impl<T: Debug + Ord + Copy> TreeNode<T> {
+impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
     // data vec must be sorted
     pub fn build(mut data: Vec<T>) -> TreeNode<T> {
-        data.sort();
+        data.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
         let n = data.len() as isize;
         let root = TreeNode::build_recursive(&data[0..], 0, n-1);
 
@@ -53,7 +52,7 @@ impl<T: Debug + Ord + Copy> TreeNode<T> {
         Some(Box::new(root))
     }
 
-    pub fn inorder(&self) {
+    pub fn inorder(&self) -> {
         match self.left {
             None => {},
             Some(ref node) => {
@@ -69,6 +68,7 @@ impl<T: Debug + Ord + Copy> TreeNode<T> {
         }
     }
 
+    // insert an element in bst O(n)
     pub fn insert(&mut self, val: T) {
         if self.val > val {
             match self.left {
@@ -83,6 +83,8 @@ impl<T: Debug + Ord + Copy> TreeNode<T> {
         }
     }
 
+
+    // checks if element exists in binar tree O(n)
     pub fn exists(&self, val: T) -> bool {
         if self.val == val {
             return true;
@@ -101,6 +103,21 @@ impl<T: Debug + Ord + Copy> TreeNode<T> {
         }
         false
     }
+
+    // finds minimum element in tree O(n)
+    pub fn find_min(&self) -> T {
+        match self.left {
+            None => self.val,
+            Some(ref n) => n.find_min()
+        }
+    }
+
+    pub fn find_max(&self) -> T {
+        match self.right {
+            None => self.val,
+            Some(ref n) => n.find_max()
+        }
+    }
 }
 
 
@@ -116,5 +133,15 @@ mod tests {
         assert_eq!(root.exists(12), true);
         assert_eq!(root.exists(13), false);
         assert_eq!(root.exists(1), true);
+        assert_eq!(root.find_min(), 1);
+        assert_eq!(root.find_max(), 12);
+    }
+    #[test]
+    fn float() {
+        let mut root = TreeNode::build(vec![1.1, 1.0, 1.5, 1.9, 1.7]);
+        assert_eq!(root.val, 1.5);
+        root.insert(1.8);
+        assert_eq!(root.exists(1.8), true);
+        assert_eq!(root.find_max(), 1.9);
     }
 }
