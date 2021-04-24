@@ -1,9 +1,9 @@
-/// Implements a TreeNode in Binary Search Tree
+/// Implements a Binary Search Tree Node.
 /// This is a recursive data structure and left
 /// and right refers to sub trees.
 ///
 /// Tree is an entry point for the root node. It's much simpler
-/// to create a tree form sorted unique i32.
+/// to create a tree form a vector.
 ///
 /// # Example
 /// Implements binary search tree with traversal (inorder)
@@ -11,20 +11,19 @@
 /// ```rust
 /// use bst::TreeNode;
 ///
-/// let root = TreeNode::build(vec![1,2,3,4,5,6,7,8,9]);
-///
-/// root.inorder()
+/// let mut root = TreeNode::build(vec![1,2,3,4,5,6,7,8,9]);
+/// root.insert(10);
+/// let ordered: Vec<_> = root.inorder();
 /// ```
-use std::fmt::Debug;
-
 pub struct TreeNode<T> {
     val: T,
     left: Option<Box<TreeNode<T>>>,
     right: Option<Box<TreeNode<T>>>
 }
 
-impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
-    // data vec must be sorted
+impl<T: PartialOrd + Copy> TreeNode<T> {
+    /// Delegates tree building to `TreeNode::build_recursive()`
+    /// This sorts vector input and pass splice to tree builder.
     pub fn build(mut data: Vec<T>) -> TreeNode<T> {
         data.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
         let n = data.len() as isize;
@@ -36,6 +35,8 @@ impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
         }
     }
 
+    /// Recursively builds tree maintaining BST properties.
+    /// Uses `O(n)` time.
     pub fn build_recursive(data: &[T], start: isize, end: isize) -> Option<Box<TreeNode<T>>> {
 
         if start > end {
@@ -52,23 +53,32 @@ impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
         Some(Box::new(root))
     }
 
-    pub fn inorder(&self) -> {
+    /// Inorder traverse tree which yields elements in sorted order.
+    /// Uses `O(n)` time.
+    /// TODO: Implement Iterator
+    pub fn inorder(&self) -> Vec<T>{
+        let mut ret: Vec<T> = Vec::new();
+
         match self.left {
             None => {},
             Some(ref node) => {
-                node.inorder();
+                let v = node.inorder();
+                ret.extend(v);
             }
         };
-        println!("{:?}", self.val);
+        ret.push(self.val);
         match self.right {
             None => {},
             Some(ref node) => {
-                node.inorder();
+                let v = node.inorder();
+                ret.extend(v);
             }
         }
+        ret
     }
 
-    // insert an element in bst O(n)
+    /// Inserts an element in a tree.
+    /// Uses `O(n)` time.
     pub fn insert(&mut self, val: T) {
         if self.val > val {
             match self.left {
@@ -84,7 +94,8 @@ impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
     }
 
 
-    // checks if element exists in binar tree O(n)
+    /// Checks if element exists in a tree.
+    /// Uses `O(n)` time.
     pub fn exists(&self, val: T) -> bool {
         if self.val == val {
             return true;
@@ -104,7 +115,8 @@ impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
         false
     }
 
-    // finds minimum element in tree O(n)
+    /// Finds minimum element in a tree.
+    /// Uses `O(n)` time.
     pub fn find_min(&self) -> T {
         match self.left {
             None => self.val,
@@ -112,6 +124,8 @@ impl<T: Debug + PartialOrd + Copy> TreeNode<T> {
         }
     }
 
+    /// Finds maximum element in a tree.
+    /// Uses `O(n)` time.
     pub fn find_max(&self) -> T {
         match self.right {
             None => self.val,
@@ -135,6 +149,13 @@ mod tests {
         assert_eq!(root.exists(1), true);
         assert_eq!(root.find_min(), 1);
         assert_eq!(root.find_max(), 12);
+        let sorted: Vec<_> = root.inorder();
+        assert_eq!(sorted, vec![1,2,3,4,5,6,7,8,9,10,11,12]);
+    }
+    #[test]
+    fn even() {
+        let root = TreeNode::build(vec![3,4,2,1]);
+        assert_eq!(root.val, 2);
     }
     #[test]
     fn float() {
