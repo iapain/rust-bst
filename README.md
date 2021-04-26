@@ -2,8 +2,14 @@
 
 Implements a Binary Search Tree in Rust. This is a recursive data structure and left and right refers to sub trees.
 
+# Installation
+In your cargo dependencies add following
+```
+ds-bst = "*"
+```
+
 ```rust
-use bst::BinarySearchTree;
+use ds_bst::BinarySearchTree;
 
 let mut node = BinarySearchTree:new(5);
 node.insert(1);

@@ -9,7 +9,7 @@
 /// Implements binary search tree with traversal (inorder)
 ///
 /// ```rust
-/// use bst::BinarySearchTree;
+/// use ds_bst::BinarySearchTree;
 ///
 /// let mut root = BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9]);
 /// root.insert(10);
