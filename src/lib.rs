@@ -1,3 +1,3 @@
-pub use crate::bst::TreeNode;
+pub use crate::bst::BinarySearchTree;
 
 mod bst;
