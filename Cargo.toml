@@ -1,5 +1,6 @@
 [package]
 name = "bst"
+description = "Binary search tree implementation"
 version = "0.1.0"
 authors = ["Deepak Thukral <iapain@gmail.com>"]
 edition = "2018"
