@@ -14,6 +14,10 @@
 /// let mut root = BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9]);
 /// root.insert(10);
 /// let ordered: Vec<_> = root.inorder();
+///
+/// let mut root2 = BinarySearchTree::new(5);
+/// root2.insert(1);
+/// root2.insert(6);
 /// ```
 pub struct BinarySearchTree<T> {
     val: T,
@@ -22,6 +26,14 @@ pub struct BinarySearchTree<T> {
 }
 
 impl<T: PartialOrd + Copy> BinarySearchTree<T> {
+    /// Contructor creates BinarySearchTree from one element
+    pub fn new(v: T) -> BinarySearchTree<T> {
+        BinarySearchTree {
+            val: v,
+            left: None,
+            right: None
+        }
+    }
     /// Delegates tree building to `BinarySearchTree::build_recursive()`
     /// This sorts vector input and pass splice to tree builder.
     pub fn from(mut data: Vec<T>) -> BinarySearchTree<T> {
@@ -179,6 +191,18 @@ mod tests {
 
         let preorder: Vec<_> = root.preorder();
         assert_eq!(preorder, vec![6, 3, 1, 2, 4, 5, 9, 7, 8, 10, 11, 12]);
+    }
+    #[test]
+    fn build_from_node() {
+        let mut root = BinarySearchTree::new(5);
+        root.insert(4);
+        root.insert(6);
+        root.insert(3);
+        root.insert(2);
+        root.insert(8);
+
+        assert_eq!(root.find_max(), 8);
+        assert_eq!(root.find_min(), 2);
     }
     #[test]
     fn even() {
