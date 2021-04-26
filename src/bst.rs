@@ -26,7 +26,7 @@ pub struct BinarySearchTree<T> {
 }
 
 impl<T: PartialOrd + Copy> BinarySearchTree<T> {
-    /// Contructor creates BinarySearchTree from one element
+    /// Contructor creates BinarySearchTree root node
     pub fn new(v: T) -> BinarySearchTree<T> {
         BinarySearchTree {
             val: v,
@@ -118,12 +118,12 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
     pub fn insert(&mut self, val: T) {
         if self.val > val {
             match self.left {
-                None => self.left = Some(Box::new(BinarySearchTree {val: val, left: None, right: None})),
+                None => self.left = Some(Box::new(BinarySearchTree::new(val))),
                 Some(ref mut n) => n.insert(val)
             }
         } else {
             match self.right {
-                None => self.right = Some(Box::new(BinarySearchTree {val: val, left: None, right: None})),
+                None => self.right = Some(Box::new(BinarySearchTree::new(val))),
                 Some(ref mut n) => n.insert(val)
             }
         }
