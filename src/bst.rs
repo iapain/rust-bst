@@ -170,6 +170,76 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
     }
 }
 
+pub struct BinarySearchTreeIter<'a, T> {
+    nodes: Vec<&'a T>
+}
+
+impl<'a, T> BinarySearchTreeIter<'a, T>
+    where
+        T: PartialOrd + Copy
+{
+    fn new(root: &'a BinarySearchTree<T>) -> Self {
+        let mut iter = BinarySearchTreeIter {
+            nodes: Vec::new()
+        };
+
+        iter.inorder(root);
+
+        iter
+    }
+
+    fn inorder(&mut self, tree: &'a BinarySearchTree<T>) {
+        match tree.right {
+            None => {},
+            Some(ref node) => {
+                self.inorder(node);
+            }
+        };
+        self.nodes.push(&tree.val);
+        match tree.left {
+            None => {},
+            Some(ref node) => {
+                self.inorder(node);
+            }
+        }
+    }
+}
+
+impl<'a, T> Iterator for BinarySearchTreeIter<'a, T>
+    where
+        T: PartialOrd + Copy,
+{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.nodes.pop()
+    }
+}
+
+/// implement non-consumable iterator for `BinarySearchTree`
+impl<T> IntoIterator for BinarySearchTree<T>
+    where
+        T: PartialOrd + Copy,
+{
+    type Item = T;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inorder().into_iter()
+    }
+}
+
+
+impl<'a, T> IntoIterator for &'a BinarySearchTree<T>
+    where
+        T: PartialOrd + Copy {
+    type Item = &'a T;
+    type IntoIter = BinarySearchTreeIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BinarySearchTreeIter::new(self)
+    }
+}
 
 
 #[cfg(test)]
@@ -216,5 +286,16 @@ mod tests {
         root.insert(1.8);
         assert_eq!(root.exists(1.8), true);
         assert_eq!(root.find_max(), 1.9);
+    }
+    #[test]
+    fn iterator() {
+        let root = BinarySearchTree::from(vec![1,2,3]);
+        let mut i = 1;
+        for v in &root {
+            assert_eq!(*v, i);
+            i = i + 1;
+        };
+
+        assert_eq!(root.find_max(), 3);
     }
 }
