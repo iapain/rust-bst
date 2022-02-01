@@ -28,7 +28,7 @@
 /// let root = BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9]);
 /// for value in &root {
 ///     // It will print values in-order traversal
-///     println!("{}", value);
+///     println!("{}", *value);
 /// }
 /// ```
 use std::cmp::{max};
