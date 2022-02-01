@@ -19,6 +19,20 @@
 /// root2.insert(1);
 /// root2.insert(6);
 /// ```
+///
+/// It also supports both consumable and non-cosumable iterator
+/// which returns values inorder.
+///
+/// ```rust
+/// use ds_bst::BinarySearchTree;
+/// let root = BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9]);
+/// for value in &root {
+///     // It will print values in-order traversal
+///     println!("{}", value);
+/// }
+/// ```
+use std::cmp::{max};
+
 pub struct BinarySearchTree<T> {
     val: T,
     left: Option<Box<BinarySearchTree<T>>>,
@@ -67,7 +81,6 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
 
     /// Inorder traverse tree which yields elements in sorted order.
     /// Uses `O(n)` time.
-    /// TODO: Implement Iterator
     pub fn inorder(&self) -> Vec<T> {
         let mut ret: Vec<T> = Vec::new();
 
@@ -91,7 +104,6 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
 
     /// Traverse tree in preorder.
     /// Uses `O(n)` time.
-    /// TODO: Implement using iterator
     pub fn preorder(&self) -> Vec<T> {
         let mut ret: Vec<T> = Vec::new();
 
@@ -111,6 +123,26 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
             }
         }
         ret
+    }
+
+    /// Calculates tree maximum height
+    /// Worst case O(n)
+    pub fn height(&self) -> usize {
+        let hl: usize = match self.left {
+            None => { 0 },
+            Some(ref node) => {
+                node.height()
+            }
+        };
+
+        let hr: usize = match self.right{
+            None => { 0 },
+            Some(ref node) => {
+                node.height()
+            }
+        };
+
+        max(hl, hr) + 1
     }
 
     /// Inserts an element in a tree.
@@ -170,6 +202,7 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
     }
 }
 
+/// BinarySearchTreeIterator
 pub struct BinarySearchTreeIter<'a, T> {
     nodes: Vec<&'a T>
 }
@@ -178,6 +211,8 @@ impl<'a, T> BinarySearchTreeIter<'a, T>
     where
         T: PartialOrd + Copy
 {
+    /// Construct nodes based on input tree. By default
+    /// it uses in-order traversal for iterator.
     fn new(root: &'a BinarySearchTree<T>) -> Self {
         let mut iter = BinarySearchTreeIter {
             nodes: Vec::new()
@@ -188,6 +223,7 @@ impl<'a, T> BinarySearchTreeIter<'a, T>
         iter
     }
 
+    /// In-order tree traversal
     fn inorder(&mut self, tree: &'a BinarySearchTree<T>) {
         match tree.right {
             None => {},
@@ -205,6 +241,8 @@ impl<'a, T> BinarySearchTreeIter<'a, T>
     }
 }
 
+/// Implement iterator for BinarySearchTreeIter
+/// nodes are stored in flat array. It just pop outs node
 impl<'a, T> Iterator for BinarySearchTreeIter<'a, T>
     where
         T: PartialOrd + Copy,
@@ -216,7 +254,7 @@ impl<'a, T> Iterator for BinarySearchTreeIter<'a, T>
     }
 }
 
-/// implement non-consumable iterator for `BinarySearchTree`
+/// implement consumable IntoIterator for BinarySearchTree
 impl<T> IntoIterator for BinarySearchTree<T>
     where
         T: PartialOrd + Copy,
@@ -229,7 +267,7 @@ impl<T> IntoIterator for BinarySearchTree<T>
     }
 }
 
-
+/// Implement non-consumable IntoIterator for BinarySearchTree
 impl<'a, T> IntoIterator for &'a BinarySearchTree<T>
     where
         T: PartialOrd + Copy {
@@ -288,7 +326,18 @@ mod tests {
         assert_eq!(root.find_max(), 1.9);
     }
     #[test]
-    fn iterator() {
+    fn iterator_consumable() {
+        let root = BinarySearchTree::from(vec![1,2,3]);
+        let mut i = 1;
+
+        for v in root {
+            assert_eq!(v, i);
+            i = i + 1;
+        }
+        // root is now consumed and cannot be used here
+    }
+    #[test]
+    fn iterator_non_consumable() {
         let root = BinarySearchTree::from(vec![1,2,3]);
         let mut i = 1;
         for v in &root {
@@ -297,5 +346,14 @@ mod tests {
         };
 
         assert_eq!(root.find_max(), 3);
+        assert_eq!(root.height(), 2);
+    }
+    #[test]
+    fn height() {
+        let root = BinarySearchTree::from(vec![1]);
+        assert_eq!(root.height(), 1);
+
+        let root2 = BinarySearchTree::from(vec![11,20,29,32,41,65,50,91,72,99]);
+        assert_eq!(root2.height(), 4)
     }
 }
