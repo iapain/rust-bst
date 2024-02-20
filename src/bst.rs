@@ -12,12 +12,13 @@
 /// use ds_bst::BinarySearchTree;
 ///
 /// let mut root = BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9]);
-/// root.insert(10);
 /// let ordered: Vec<_> = root.inorder();
+/// let maximum = root.find_max();
+/// let height = root.height();
 ///
-/// let mut root2 = BinarySearchTree::new(5);
-/// root2.insert(1);
-/// root2.insert(6);
+/// root.insert(10);
+/// root.insert(11);
+/// root.insert(10); // will be ingnored
 /// ```
 ///
 /// It also supports both consumable and non-cosumable iterator
@@ -31,15 +32,17 @@
 ///     println!("{}", *value);
 /// }
 /// ```
+use std::mem::swap;
 use std::cmp::{max};
 
+#[derive(Debug)]
 pub struct BinarySearchTree<T> {
     val: T,
     left: Option<Box<BinarySearchTree<T>>>,
     right: Option<Box<BinarySearchTree<T>>>
 }
 
-impl<T: PartialOrd + Copy> BinarySearchTree<T> {
+impl<T: PartialOrd + Copy + std::fmt::Debug> BinarySearchTree<T> {
     /// Contructor creates BinarySearchTree root node
     pub fn new(v: T) -> BinarySearchTree<T> {
         BinarySearchTree {
@@ -165,21 +168,18 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
     /// Checks if element exists in a tree.
     /// Uses `O(n)` time.
     pub fn exists(&self, val: T) -> bool {
-        if self.val == val {
-            return true;
-        }
-        if self.val > val {
-            return match self.left {
-                None => false,
-                Some(ref n) => n.exists(val)
-            };
-        }
-        if self.val < val {
-            return match self.right {
-                None => false,
-                Some(ref n) => n.exists(val)
-            };
-        }
+        match Some(self) {
+            None => {},
+            Some(ref n) => {
+                if n.find(&val).is_some() {
+                    return true
+                }
+                else {
+                    return false;
+                }
+            }
+        };
+
         false
     }
 
@@ -200,6 +200,62 @@ impl<T: PartialOrd + Copy> BinarySearchTree<T> {
             Some(ref n) => n.find_max()
         }
     }
+
+    /// Finds element in a tree and returns node
+    /// Uses `O(n)`
+    pub fn find(&self, value: &T) -> Option<Box<&BinarySearchTree<T>>> {
+        if value > &self.val {
+            match self.right {
+                None => None,
+                Some(ref n) => n.find(&value)
+            }
+        } else if value < &self.val {
+            match self.left {
+                None => None,
+                Some(ref n) => n.find(&value)
+            }
+        } else {
+            Some(Box::from(self))
+        }
+    }
+
+    /// Removes a node from tree.
+    /// Uses `O(n)` time
+    pub fn remove(node: &mut Option<Box<BinarySearchTree<T>>>, value: &T) {
+        match node {
+            None => {},
+            Some(ref mut n) => {
+                println!("{:?} {:?}", value, &n.val);
+                if &n.val < value {
+                    BinarySearchTree::remove(&mut n.right, value);
+                }
+                else if &n.val > value {
+                    BinarySearchTree::remove(&mut n.left, value);
+                }
+                else {
+                    match(n.left.as_mut(), n.right.as_mut()) {
+                        (None, None) => { swap(&mut None, node) },
+                        (Some(_), None) => {
+                            let l = n.left.take();
+                            swap(&mut n.val, &mut l.unwrap().val);
+                            swap(&mut None, &mut n.left);
+                        },
+                        (None, Some(_)) => {
+                            let r = n.right.take();
+                            swap(&mut n.val, &mut r.unwrap().val);
+                            swap(&mut None, &mut n.right);
+                        },
+                        (Some(_), Some(_)) => {
+                            let mut m = n.right.take().unwrap().find_min();
+                            println!("min: {:?}", m);
+                            swap(&mut None, &mut n.find(&m));
+                            swap(&mut n.val, &mut m);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// BinarySearchTreeIterator
@@ -209,7 +265,7 @@ pub struct BinarySearchTreeIter<'a, T> {
 
 impl<'a, T> BinarySearchTreeIter<'a, T>
     where
-        T: PartialOrd + Copy
+        T: PartialOrd + Copy + std::fmt::Debug
 {
     /// Construct nodes based on input tree. By default
     /// it uses in-order traversal for iterator.
@@ -245,7 +301,7 @@ impl<'a, T> BinarySearchTreeIter<'a, T>
 /// nodes are stored in flat array. It just pop outs node
 impl<'a, T> Iterator for BinarySearchTreeIter<'a, T>
     where
-        T: PartialOrd + Copy,
+        T: PartialOrd + Copy + std::fmt::Debug,
 {
     type Item = &'a T;
 
@@ -257,7 +313,7 @@ impl<'a, T> Iterator for BinarySearchTreeIter<'a, T>
 /// implement consumable IntoIterator for BinarySearchTree
 impl<T> IntoIterator for BinarySearchTree<T>
     where
-        T: PartialOrd + Copy,
+        T: PartialOrd + Copy + std::fmt::Debug,
 {
     type Item = T;
     type IntoIter = std::vec::IntoIter<Self::Item>;
@@ -270,7 +326,7 @@ impl<T> IntoIterator for BinarySearchTree<T>
 /// Implement non-consumable IntoIterator for BinarySearchTree
 impl<'a, T> IntoIterator for &'a BinarySearchTree<T>
     where
-        T: PartialOrd + Copy {
+        T: PartialOrd + Copy + std::fmt::Debug{
     type Item = &'a T;
     type IntoIter = BinarySearchTreeIter<'a, T>;
 
@@ -307,6 +363,7 @@ mod tests {
         root.insert(6);
         root.insert(3);
         root.insert(2);
+        root.insert(8);
         root.insert(8);
 
         assert_eq!(root.find_max(), 8);
@@ -355,5 +412,14 @@ mod tests {
 
         let root2 = BinarySearchTree::from(vec![11,20,29,32,41,65,50,91,72,99]);
         assert_eq!(root2.height(), 4)
+    }
+    #[test]
+    fn remove() {
+        let mut root = Some(Box::new(BinarySearchTree::from(vec![1,2,3,4,5,6,7,8,9])));
+        assert_eq!(root.as_ref().unwrap().val, 5);
+        BinarySearchTree::remove(&mut root, &5);
+        //BinarySearchTree::remove(&mut root, &10);
+        //BinarySearchTree::remove(&mut root, &4);
+        assert_eq!(root.unwrap().inorder(), vec![1,2,3,4,6,7,8,9]);
     }
 }
